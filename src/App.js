@@ -1,6 +1,10 @@
-import { getDocs, addDoc, deleteDoc, doc, onSnapshot, where, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { 
+  getDocs, addDoc, deleteDoc, doc, onSnapshot, 
+  where, query, orderBy, serverTimestamp, getDoc, updateDoc } from "firebase/firestore";
 import colRef from "./firebase/fbConfig";
 import { db } from "./firebase/fbConfig";
+import Authentication from "./Authentication";
+import unsubAuth from "./Authentication";
 
 function App() {
   // getDocs(colRef)
@@ -20,7 +24,7 @@ function App() {
 const q = query(colRef, orderBy('createdAt'))
 
   
-  onSnapshot(q, (snapshot) => {
+const unsubCol = onSnapshot(q, (snapshot) => {
     let books = []
       snapshot.docs.forEach((book) => {
         books.push({ ...book.data(), id: book.id})
@@ -52,7 +56,35 @@ const q = query(colRef, orderBy('createdAt'))
       })
      e.target.reset()
   }
+
+  //get a singel document
+  const docRef = doc(db, 'books', 'FVFx6Ny7eJBRNqmGwIeG')
+  // getDoc(docRef)
+  //   .then((doc) => {
+  //     console.log(doc.data(), doc.id)
+  //   })
+  const unsubDoc = onSnapshot(docRef, (doc) => {
+      console.log(doc.data(), doc.id)
+    })
+
+  const updateBook = (e) => {
+    e.preventDefault()
+    const docRef = doc(db, 'books', e.target.id.value)
+    updateDoc(docRef, {
+      title: "book has updated"
+    })
+      .then(() =>{
+        console.log("book has been update")
+      })
+  }
   
+  const unSub = () => {
+    console.log("Unsubscribe")
+    unsubCol()
+    unsubAuth()
+  }
+
+
   return (
     <div className="App">
       <h2>Firebase Firestore</h2>
@@ -72,6 +104,17 @@ const q = query(colRef, orderBy('createdAt'))
 
           <button>delete a book</button>
         </form>
+
+        <form onSubmit={ updateBook }>
+          <label htmlFor="update">Document ID</label>
+          <input type="text" id="update" required/>
+          <button>Update a book</button>
+        </form>
+
+        <Authentication />
+
+        <h2>Unsubscribing</h2>
+        <button onClick={ unSub }>unsubscribe from db/auth changes</button>
     </div>
   );
 }
